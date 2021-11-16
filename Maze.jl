@@ -70,7 +70,7 @@ function atgoal(m::Maze)::Bool
     m.p.in == m.goal
 end
 
-function step!(m::Maze, action::Integer)
+function envstep!(m::Maze, action::Integer)
     if action < 0 || action > 4
         error("action should be in [1, 4] but got $action")
     end
