@@ -82,8 +82,8 @@ function binarytree!(g::Grid, rng::AbstractRNG, b::BiasDirection=NW)
 
         if length(neighbours) > 0
             index = abs((rand(rng, Int) % length(neighbours))) + 1
-            neighbourCell = neighbours[index]
-            link(cell, neighbourCell)
+            neighbour_cell = neighbours[index]
+            link(cell, neighbour_cell)
         end
     end
 end
@@ -100,35 +100,112 @@ function iterative!(g::Grid, rng::AbstractRNG)
     # Choose a random starting cell
     r = abs(rand(rng, Int) % length(g.rows)) + 1
     c = abs(rand(rng, Int) % length(g.cols)) + 1
-    currentCell = g[r, c]
+    current_cell = g[r, c]
 
-    push!(s, currentCell)
+    push!(s, current_cell)
 
     while length(s) > 0
         # Choose a random unvisited neighbour
-        neighboursCells::Vector{Cell} = []
-        currentCell = pop!(s)
-        for cell in neighbours(currentCell)
+        neighbour_cells::Vector{Cell} = []
+        current_cell = pop!(s)
+        for cell in neighbours(current_cell)
             if cell === nothing
                 continue
             end
 
             if !(cell in visited)
-                push!(neighboursCells, cell)
+                push!(neighbour_cells, cell)
             end
         end
 
-        if length(neighboursCells) > 0
-            push!(s, currentCell)
-            index = abs(rand(rng, Int) % length(neighboursCells)) + 1
-            neighbourCell = neighboursCells[index]
-            link(neighbourCell, currentCell)
-            push!(visited, neighbourCell)
-            push!(s, neighbourCell)
+        if length(neighbour_cells) > 0
+            push!(s, current_cell)
+            index = abs(rand(rng, Int) % length(neighbour_cells)) + 1
+            neighbour_cell = neighbour_cells[index]
+            link(neighbour_cell, current_cell)
+            push!(visited, neighbour_cell)
+            push!(s, neighbour_cell)
         end
     end
 end
 
+"""
+    aldousbroder!(g::Grid, rng::AbstractRNG)
+
+Initiailzes a maze with the Aldous-Broder algorithm
+"""
+function aldousbroder!(g::Grid, rng::AbstractRNG)
+    visited = Set{Cell}()
+
+    # Choose a random starting cell
+    r = abs(rand(rng, Int)) % length(g.rows) + 1
+    c = abs(rand(rng, Int)) % length(g.rows) + 1
+    current_cell = g[r, c]
+
+    push!(visited, current_cell)
+
+    while length(visited) < length(g)
+        neighbour_cell = random_neighbour(current_cell, rng)
+
+        if neighbour_cell ∉ visited
+            link(current_cell, neighbour_cell)
+            push!(visited, neighbour_cell)
+        end
+        current_cell = neighbour_cell
+    end
+end
+
+"""
+    backtracking!(g::Grid, rng::AbstractRNG)
+
+Initiailzes a maze with the recursive backtracking algorithm
+"""
+function backtracking!(g::Grid, rng::AbstractRNG)
+    s = Stack{Cell}()
+    visited = Set{Cell}()
+
+    # Choose a random starting cell
+    r = abs(rand(rng, Int)) % length(g.rows) + 1
+    c = abs(rand(rng, Int)) % length(g.cols) + 1
+    current_cell = g[r, c]
+
+    push!(s, current_cell)
+
+    while length(s) > 0
+        neighbour_cells::Vector{Cell} = []
+        for cell ∈ neighbours(current_cell)
+            if cell === nothing
+                continue
+            end
+
+            if cell ∉ visited
+                push!(neighbour_cells, cell)
+            end
+        end
+
+        if length(neighbour_cells) == 0
+            # If all neighbours have been visited, we are done with this
+            # cell and we backtrack to a previous cell
+            current_cell = pop!(s)
+        else
+            # An univisted neighbour was found, move to that cell and mark
+            # it as the current cell
+            index = abs(rand(rng, Int)) % length(neighbour_cells) + 1
+            neighbour_cell = neighbour_cells[index]
+            link(neighbour_cell, current_cell)
+            push!(visited, neighbour_cell)
+            push!(s, neighbour_cell)
+            current_cell = neighbour_cell
+        end
+    end
+end
+
+"""
+    bias(b::BiasDirection)
+
+Returns two functions indicating the biases to use for the binary
+tree maze initialization algorithm.
+"""
 function bias(b::BiasDirection)
     if b == NW
         return north, west
@@ -140,13 +217,3 @@ function bias(b::BiasDirection)
         return south, east
     end
 end
-
-g = Grid(10, 10)
-rng = Random.MersenneTwister(1)
-iterative!(g, rng)
-println(g)
-println(g[1, 2])
-println(g[1, 1].links)
-println(g[1, 2].links)
-println(g[1, 3].links)
-println(g[2, 3].links)

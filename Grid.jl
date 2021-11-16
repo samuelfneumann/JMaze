@@ -1,3 +1,4 @@
+using Random
 
 include("Cell.jl")
 

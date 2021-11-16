@@ -22,7 +22,7 @@ function north(c::Cell)
 end
 
 function can_move_north(c::Cell)::Bool
-    return north(c) !== nothing
+    linked(c, north(c))
 end
 
 function south(c::Cell)
@@ -30,7 +30,7 @@ function south(c::Cell)
 end
 
 function can_move_south(c::Cell)::Bool
-    return south(c) !== nothing
+    linked(c, south(c))
 end
 
 function east(c::Cell)
@@ -38,7 +38,7 @@ function east(c::Cell)
 end
 
 function can_move_east(c::Cell)::Bool
-    return east(c) !== nothing
+    linked(c, east(c))
 end
 
 function west(c::Cell)
@@ -46,7 +46,7 @@ function west(c::Cell)
 end
 
 function can_move_west(c::Cell)::Bool
-    return west(c) !== nothing
+    linked(c, west(c))
 end
 
 function random_neighbour(c::Cell, rng::AbstractRNG)::Cell
@@ -111,12 +111,3 @@ end
 function Base.show(io::IO, c::Cell)
     print(io, "Cell($(c.row), $(c.col))")
 end
-
-rng = MersenneTwister(1)
-c = Cell(1, 1)
-c2 = Cell(2, 2)
-c.north = c2
-link(c, c2)
-println(c)
-println(random_neighbour(c, rng))
-println(neighbours(c))
