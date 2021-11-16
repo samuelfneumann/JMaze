@@ -96,6 +96,10 @@ function reset!(m::Maze)
     obs(m)
 end
 
+function start!(m::Maze)
+    reset!(m)
+end
+
 function Base.show(io::IO, m::Maze)
     print(io, "+")
 
